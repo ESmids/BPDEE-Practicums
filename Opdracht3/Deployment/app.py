@@ -6,20 +6,6 @@ import sqlite3
 from datetime import datetime
 import pandas as pd
 
-def generate_synthetic_data(n=50):
-    np.random.seed(42)
-
-    data = pd.DataFrame({
-        "X1 transaction date": np.random.normal(2013, 0.3, n),
-        "X2 house age": np.random.normal(20, 10, n).clip(0, 50),
-        "X3 distance to the nearest MRT station": np.random.normal(1000, 500, n).clip(0, 5000),
-        "X4 number of convenience stores": np.random.randint(0, 10, n),
-        "X5 latitude": np.random.normal(24.97, 0.01, n),
-        "X6 longitude": np.random.normal(121.54, 0.01, n)
-    })
-
-    return data
-
 # Database initialiseren
 def init_db():
     conn = sqlite3.connect("predictions.db")
@@ -138,7 +124,16 @@ else:
 
 if st.button("Simulate Predictions"):
 
-    synthetic_data = generate_synthetic_data(50)
+    synthetic_data = pd.read_csv("synthetic_data.csv")
+
+    synthetic_data = synthetic_data[[
+        "X1 transaction date",
+        "X2 house age",
+        "X3 distance to the nearest MRT station",
+        "X4 number of convenience stores",
+        "X5 latitude",
+        "X6 longitude"
+    ]]
 
     base_time = datetime.now()
 
@@ -147,9 +142,8 @@ if st.button("Simulate Predictions"):
         scaled = scaler.transform(input_df.values)
         pred = model.predict(scaled)[0]
 
-        # Elke datapunt iets later in de tijd
         timestamp = base_time + timedelta(minutes=i)
 
         save_prediction(input_df, float(pred), timestamp)
 
-    st.success("50 synthetic predictions toegevoegd")
+    st.success("Synthetic dataset verwerkt")
