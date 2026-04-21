@@ -10,6 +10,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py .
 COPY regression_model.pkl .
 COPY regression_scaler.pkl .
+COPY predictions.db .
+COPY real_estate_synthetic.csv .
 
 # Render sets $PORT for web services
 
