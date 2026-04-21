@@ -6,6 +6,13 @@ import sqlite3
 from datetime import datetime
 import pandas as pd
 
+selected_features = [
+    "X2 house age",
+    "X3 distance to the nearest MRT station",
+    "X4 number of convenience stores",
+    "X5 latitude"
+]
+
 # Database initialiseren
 def init_db():
     conn = sqlite3.connect("predictions.db")
@@ -84,7 +91,7 @@ stores = st.number_input("Number of convenience stores", value=5)
 latitude = st.number_input("Latitude", value=24.97)
 longitude = st.number_input("Longitude", value=121.54)
 
-# Dataframe maken
+# Dataframe maken (keep all for database/history)
 input_data = pd.DataFrame({
     "X1 transaction date": [transaction_date],
     "X2 house age": [house_age],
@@ -94,8 +101,11 @@ input_data = pd.DataFrame({
     "X6 longitude": [longitude]
 })
 
+# Select only the features used in training for prediction
+input_for_model = input_data[selected_features]
+
 # Scaling
-input_scaled = scaler.transform(input_data.values)
+input_scaled = scaler.transform(input_for_model.values)
 
 # Predictie
 if st.button("Predict Price"):
@@ -125,15 +135,7 @@ else:
 if st.button("Simulate Predictions"):
 
     synthetic_data = pd.read_csv("synthetic_data.csv")
-
-    synthetic_data = synthetic_data[[
-        "X1 transaction date",
-        "X2 house age",
-        "X3 distance to the nearest MRT station",
-        "X4 number of convenience stores",
-        "X5 latitude",
-        "X6 longitude"
-    ]]
+    synthetic_data = synthetic_data[selected_features]
 
     base_time = datetime.now()
 
