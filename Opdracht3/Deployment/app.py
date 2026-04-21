@@ -145,7 +145,7 @@ else:
 if st.button("Simulate Predictions"):
 
     # Load all 6 columns so the scaler gets what it expects
-    synthetic_data = pd.read_csv("synthetic_data.csv")
+    synthetic_data = pd.read_csv("real_estate_synthetic.csv")
 
     base_time = datetime.now()
 
