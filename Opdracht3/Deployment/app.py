@@ -13,6 +13,15 @@ selected_features = [
     "X5 latitude"
 ]
 
+all_features = [
+    "X1 transaction date",
+    "X2 house age",
+    "X3 distance to the nearest MRT station",
+    "X4 number of convenience stores",
+    "X5 latitude",
+    "X6 longitude"
+]
+
 # Database initialiseren
 def init_db():
     conn = sqlite3.connect("predictions.db")
@@ -91,7 +100,7 @@ stores = st.number_input("Number of convenience stores", value=5)
 latitude = st.number_input("Latitude", value=24.97)
 longitude = st.number_input("Longitude", value=121.54)
 
-# Dataframe maken (keep all for database/history)
+# Dataframe maken (all 6 features for scaler)
 input_data = pd.DataFrame({
     "X1 transaction date": [transaction_date],
     "X2 house age": [house_age],
@@ -101,15 +110,16 @@ input_data = pd.DataFrame({
     "X6 longitude": [longitude]
 })
 
-# Select only the features used in training for prediction
-input_for_model = input_data[selected_features]
+# Scale all 6 features (scaler was trained on all 6)
+input_scaled_all = scaler.transform(input_data.values)
 
-# Scaling
-input_scaled = scaler.transform(input_for_model.values)
+# Convert back to DataFrame and select only the 4 features the model needs
+input_scaled_df = pd.DataFrame(input_scaled_all, columns=all_features)
+input_for_model = input_scaled_df[selected_features]
 
 # Predictie
 if st.button("Predict Price"):
-    prediction = model.predict(input_scaled)
+    prediction = model.predict(input_for_model.values)
 
     st.subheader("Voorspelde woningprijs per unit area:")
     st.write(f"{prediction[0]:.2f}")
@@ -134,15 +144,23 @@ else:
 
 if st.button("Simulate Predictions"):
 
+    # Load all 6 columns so the scaler gets what it expects
     synthetic_data = pd.read_csv("synthetic_data.csv")
-    synthetic_data = synthetic_data[selected_features]
 
     base_time = datetime.now()
 
     for i, row in synthetic_data.iterrows():
-        input_df = pd.DataFrame([row])
-        scaled = scaler.transform(input_df.values)
-        pred = model.predict(scaled)[0]
+        # Build full 6-feature DataFrame for the scaler
+        input_df = pd.DataFrame([row[all_features]])
+
+        # Scale all 6 features
+        scaled_all = scaler.transform(input_df.values)
+
+        # Select only the 4 features the model was trained on
+        scaled_df = pd.DataFrame(scaled_all, columns=all_features)
+        input_for_model_sim = scaled_df[selected_features]
+
+        pred = model.predict(input_for_model_sim.values)[0]
 
         timestamp = base_time + timedelta(minutes=i)
 
